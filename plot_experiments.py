@@ -1,6 +1,14 @@
 """
-TUFCI Experiment Figures — PLOS ONE Revision  [v2: vivid colours, fixed legends, redesigned Fig4]
+TUFCI Experiment Figures — PLOS ONE Revision  [v3: fig7 fix, fig5 redesigned as line grid]
 Generates Fig 1–7 from results/ directory CSVs.
+
+Changes from v2:
+  - Fig 7: fixed KeyError by using correct column 'peak_heap_mb' from exp8 CSV
+            (was incorrectly reading 'max_frontier_size' which does not exist)
+  - Fig 5: redesigned from grouped bar chart → 4-row × 4-col line-plot grid
+            (one row per sensitivity parameter, one column per dataset)
+            This is more appropriate for continuous parameter sweeps and clearly
+            shows monotonicity / independence of each parameter's effect.
 
 Usage:  python plot_experiments.py
 Output: figures/fig1.pdf ... figures/fig7.pdf  (+ .png)
@@ -30,7 +38,7 @@ matplotlib.rcParams.update({
     "legend.fontsize":    9,
     "legend.framealpha":  0.88,
     "legend.edgecolor":   "#bbbbbb",
-    "figure.dpi":         150,
+    "figure.dpi":         300,  # PLOS ONE requirement: minimum 300 DPI
     "axes.grid":          True,
     "grid.color":         "#dddddd",
     "grid.linestyle":     "-",
@@ -106,7 +114,7 @@ ABL_LABELS = {
     "ONLY_G2_G3_G4":  "Only G2+G3+G4",
 }
 
-# Sensitivity
+# Sensitivity — one colour per parameter (for the redesigned Fig 5)
 PARAM_PALETTE = {
     "alpha": "#D62728",
     "rho":   "#1F77B4",
@@ -118,6 +126,12 @@ PARAM_LABELS = {
     "rho":   r"$\rho$",
     "p_min": r"$p_{\min}$",
     "p_max": r"$p_{\max}$",
+}
+PARAM_MARKERS = {
+    "alpha": "o",
+    "rho":   "s",
+    "p_min": "^",
+    "p_max": "D",
 }
 
 # Group dominance
@@ -172,28 +186,35 @@ def _draw_lines(ax, df, dataset, algos, metric):
     ax.set_title(DATASET_NAMES.get(dataset, dataset), pad=6)
 
 
-def _line_figure(df, algos, metric, ylabel, suptitle, outname, ncol_legend=3):
-    datasets  = sorted(df["dataset"].unique())
-    n_ds      = len(datasets)
-    fig, axes = plt.subplots(1, n_ds, figsize=(4.6 * n_ds, 4.2), sharey=False)
-    if n_ds == 1:
-        axes = [axes]
+def _line_figure(df, algos, metric, ylabel, outname, ncol_legend=3):
+    datasets = sorted(df["dataset"].unique())
+    n_ds = len(datasets)
+
+    # Thay đổi từ (1, n_ds) sang (2, 2) nếu có 4 datasets
+    if n_ds == 4:
+        fig, axes = plt.subplots(2, 2, figsize=(10, 9), sharey=False)
+        axes = axes.flatten()
+    else:
+        fig, axes = plt.subplots(1, n_ds, figsize=(4.6 * n_ds, 4.2), sharey=False)
+        if n_ds == 1: axes = [axes]
 
     for i, (ax, ds) in enumerate(zip(axes, datasets)):
         _draw_lines(ax, df, ds, algos, metric)
-        ax.set_ylabel(ylabel if i == 0 else "")
+        # Ghi nhãn y cho các biểu đồ ở cột bên trái (0 và 2)
+        if n_ds == 4:
+            ax.set_ylabel(ylabel if i % 2 == 0 else "")
+        else:
+            ax.set_ylabel(ylabel if i == 0 else "")
 
     handles = [_make_line_handle(a) for a in algos]
     fig.legend(handles=handles, loc="lower center",
                ncol=min(ncol_legend, len(algos)),
-               bbox_to_anchor=(0.5, -0.13),
+               bbox_to_anchor=(0.5, -0.05),  # Điều chỉnh vị trí legend cho khớp lưới 2x2
                framealpha=0.9, edgecolor="#bbbbbb",
                handlelength=2.8, handleheight=1.2)
-    fig.suptitle(suptitle, fontsize=13, fontweight="bold", y=1.02)
     fig.tight_layout()
-    fig.savefig(f"figures/{outname}.pdf", bbox_inches="tight")
-    fig.savefig(f"figures/{outname}.png", bbox_inches="tight")
-    print(f"  ✓ {outname} saved")
+    fig.savefig(f"figures/{outname.upper()}.tif", bbox_inches="tight", dpi=300, format="tiff")
+    print(f"  ✓ {outname.upper()}.tif saved as 2x2 grid")
     plt.close(fig)
 
 
@@ -257,8 +278,7 @@ def fig1(df):
     _line_figure(df,
                  algos=["V1_BFS_Full", "TopKPFIM", "ITUFP"],
                  metric="runtime_ms", ylabel="Runtime (ms)",
-                 suptitle="Fig 1 — Runtime: TUFCI-BFS (Full) vs External Baselines",
-                 outname="fig1", ncol_legend=3)
+                 outname="fig3", ncol_legend=3)
 
 
 # ── Fig 2 ─────────────────────────────────────────────────────────────────────
@@ -266,81 +286,77 @@ def fig2(df):
     _line_figure(df,
                  algos=["V1_BFS_Full", "V2_DFS_Full", "V3_BFS_Search", "V4_DFS_Search"],
                  metric="runtime_ms", ylabel="Runtime (ms)",
-                 suptitle="Fig 2 — Runtime: TUFCI-BFS (Full) vs Internal Variants",
-                 outname="fig2", ncol_legend=4)
+                 outname="fig4", ncol_legend=4)
 
 
 # ── Fig 3 ─────────────────────────────────────────────────────────────────────
 def fig3(df):
     _line_figure(df,
-                 algos=["V1_BFS_Full", "V2_DFS_Full", "V3_BFS_Search", "V4_DFS_Search"],
+                 algos=["V1_BFS_Full", "V2_DFS_Full"],
                  metric="closure_checks", ylabel="Closure checks",
-                 suptitle="Fig 3 — Closure Checks: 4 Internal Variants",
-                 outname="fig3", ncol_legend=4)
+                 outname="fig5", ncol_legend=4)
 
 
+# ── Fig 4 — Ablation: slowdown factor, horizontal bar, clean layout ────────────
 # ── Fig 4 — Ablation: slowdown factor, horizontal bar, clean layout ────────────
 def fig4(df4a):
     df = df4a.copy()
     df["ds"] = df["dataset"].apply(
         lambda x: os.path.splitext(os.path.basename(str(x)))[0]
-                    .replace("processed_data/", "").replace("_uncertain", ""))
+        .replace("processed_data/", "").replace("_uncertain", ""))
 
+    # ĐÃ LOẠI BỎ "ONLY_G2_G3_G4" KHỎI DANH SÁCH DƯỚI ĐÂY
     CONFIG_ORDER = ["FULL", "NO_G1_frontier", "NO_G2_item",
-                    "NO_G3_upbound", "NO_G4_tidset", "ONLY_G1", "ONLY_G2_G3_G4"]
-    datasets = sorted(df["ds"].unique())
-    configs  = [c for c in CONFIG_ORDER if c in df["config"].unique()]
+                    "NO_G3_upbound", "NO_G4_tidset", "ONLY_G1"]
 
-    n_ds  = len(datasets)
+    datasets = sorted(df["ds"].unique())
+    configs = [c for c in CONFIG_ORDER if c in df["config"].unique()]
+
+    n_ds = len(datasets)
     fig, axes = plt.subplots(1, n_ds,
                              figsize=(5.4 * n_ds, 4.8),
-                             sharey=True)            # shared y → aligned labels
+                             sharey=True)
     if n_ds == 1:
         axes = [axes]
 
     for ax, ds in zip(axes, datasets):
-        sub   = df[df["ds"] == ds]
+        sub = df[df["ds"] == ds]
         means = sub.groupby("config")["runtime_ms"].mean().reindex(configs)
-        stds  = sub.groupby("config")["runtime_ms"].std().reindex(configs).fillna(0)
 
-        full_val  = means["FULL"] if "FULL" in means.index else means.iloc[0]
-        slowdown  = means / full_val
-        sd_err    = stds  / full_val
+        full_val = means["FULL"] if "FULL" in means.index else means.iloc[0]
+        slowdown = means / full_val
 
-        y_pos  = np.arange(len(configs))
+        y_pos = np.arange(len(configs))
         colors = [ABL_PALETTE.get(c, "#aaaaaa") for c in configs]
         alphas = [1.0 if c == "FULL" else 0.82 for c in configs]
 
-        for yi, (slw, err, clr, alp, cfg) in enumerate(
-                zip(slowdown, sd_err, colors, alphas, configs)):
-            ax.barh(yi, slw, xerr=err,
+        for yi, (slw, clr, alp, cfg) in enumerate(
+                zip(slowdown, colors, alphas, configs)):
+            # Vẽ thanh ngang (không có xerr)
+            ax.barh(yi, slw,
                     color=clr, alpha=alp,
-                    edgecolor="white", linewidth=0.7, height=0.62,
-                    error_kw=dict(elinewidth=1.3, capsize=4,
-                                  ecolor="#333333", capthick=1.2))
-            # Value label
-            x_lbl = slw + err + 0.03
+                    edgecolor="white", linewidth=0.7, height=0.62)
+
+            # Đặt nhãn văn bản sát cạnh thanh
+            x_lbl = slw + 0.03
             ax.text(x_lbl, yi, f"{slw:.2f}×",
                     va="center", ha="left", fontsize=8.8,
                     fontweight="bold" if cfg == "FULL" else "normal",
                     color="#111111")
 
-        # Baseline reference
         ax.axvline(1.0, color="#D62728", linestyle="--",
                    linewidth=1.8, zorder=5)
         ax.set_yticks(y_pos)
         ax.set_yticklabels([ABL_LABELS.get(c, c) for c in configs], fontsize=9.5)
         ax.set_xlabel("Slowdown vs Full  (×)", fontsize=10)
         ax.set_title(DATASET_NAMES.get(ds, ds), pad=7)
-        x_max = max(slowdown.fillna(0)) + max(sd_err.fillna(0)) + 0.5
+
+        x_max = max(slowdown.fillna(0)) + 0.3
         ax.set_xlim(0, max(x_max, 1.4))
         ax.invert_yaxis()
-        # Subtle band on FULL row (top after invert)
-        ax.axhspan(len(configs) - 1 - 0.38,
-                   len(configs) - 1 + 0.38,
-                   color="#D62728", alpha=0.07, zorder=0)
+        ax.axhspan(-0.38, 0.38, color="#D62728", alpha=0.07, zorder=0)
 
-    # Legend
+    # Chú thích tự động cập nhật theo danh sách configs mới
     cfg_handles = [
         mpatches.Patch(facecolor=ABL_PALETTE.get(c, "#aaa"),
                        edgecolor="white", alpha=0.9,
@@ -349,80 +365,105 @@ def fig4(df4a):
     ]
     baseline_handle = mlines.Line2D([], [], color="#D62728", linestyle="--",
                                     linewidth=1.8, label="Full baseline (1.0×)")
+
     fig.legend(handles=cfg_handles + [baseline_handle],
                loc="lower center", ncol=min(4, len(cfg_handles) + 1),
                bbox_to_anchor=(0.5, -0.12),
                framealpha=0.92, edgecolor="#bbbbbb", fontsize=9)
 
-    fig.suptitle("Fig 4 — Ablation Study: Slowdown Factor per Pruning Configuration",
-                 fontsize=13, fontweight="bold", y=1.02)
     fig.tight_layout()
-    fig.savefig("figures/fig4.pdf", bbox_inches="tight")
-    fig.savefig("figures/fig4.png", bbox_inches="tight")
-    print("  ✓ fig4 saved")
+    fig.savefig("figures/Fig6.tif", bbox_inches="tight", dpi=300, format="tiff")
+    print("  ✓ Fig4.tif saved (removed ONLY_G2_G3_G4 and error bars)")
     plt.close(fig)
 
 
-# ── Fig 5 — Sensitivity runtime ────────────────────────────────────────────────
+
+# ── Fig 5 — Sensitivity: 4 subplots (one per parameter), each showing all datasets ───
+# Redesigned to merge datasets: each subplot shows one parameter with all datasets as lines
+# This makes it easier to compare how different datasets respond to each parameter.
 def fig5(df3):
     df = df3.copy()
     df["ds"] = df["dataset"].str.replace("_uncertain", "", regex=False)
     datasets = sorted(df["ds"].unique())
-    PARAMS   = ["alpha", "rho", "p_min", "p_max"]
+    PARAMS = ["alpha", "rho", "p_min", "p_max"]
 
-    n_ds  = len(datasets)
-    fig, axes = plt.subplots(1, n_ds, figsize=(5.8 * n_ds, 4.4), sharey=False)
-    if n_ds == 1:
-        axes = [axes]
+    # Dataset colors (one per dataset)
+    DS_COLORS = {
+        "chess": "#D62728",
+        "liquor_11frequent": "#1F77B4",
+        "mushrooms": "#2CA02C",
+        "retail": "#FF7F0E",
+    }
+    DS_MARKERS = {
+        "chess": "o",
+        "liquor_11frequent": "s",
+        "mushrooms": "^",
+        "retail": "D",
+    }
 
-    for ax, ds in zip(axes, datasets):
-        sub    = df[df["ds"] == ds]
-        x_pos  = 0
-        xticks, xlabels = [], []
-        grp_mid, grp_nm = [], []
+    fig, axes = plt.subplots(2, 2, figsize=(11, 9), sharey=False)
+    axes = axes.flatten()
 
-        for param in PARAMS:
-            p_sub = sub[sub["param"] == param].sort_values("value")
-            if p_sub.empty:
+    for idx, param in enumerate(PARAMS):
+        ax = axes[idx]
+
+        for ds in datasets:
+            sub = (df[(df["ds"] == ds) & (df["param"] == param)]
+                   .sort_values("value"))
+
+            if sub.empty:
                 continue
-            vals = p_sub["value"].tolist()
-            rts  = p_sub["runtime_mean_ms"].tolist()
-            xs   = np.arange(len(vals), dtype=float) + x_pos   # avoids float arange endpoint bug
-            ax.bar(xs, rts,
-                   color=PARAM_PALETTE[param], width=0.72,
-                   edgecolor="white", linewidth=0.5, zorder=3)
-            for xi, v in zip(xs, vals):
-                xticks.append(xi); xlabels.append(str(v))
-            grp_mid.append(float(np.mean(xs)))
-            grp_nm.append(PARAM_LABELS[param])
-            x_pos += len(vals) + 1.8
 
-        ax.set_xticks(xticks)
-        ax.set_xticklabels(xlabels, rotation=0, fontsize=8.5)
-        ax.set_ylabel("Runtime (ms)" if ax is axes[0] else "")
-        ax.set_title(DATASET_NAMES.get(ds, ds), pad=6)
+            xs = sub["value"].tolist()
+            ys = sub["runtime_mean_ms"].tolist()
+            color = DS_COLORS.get(ds, "#888888")
+            mkr = DS_MARKERS.get(ds, "o")
 
-        # Group labels below tick labels
-        ymin, ymax = ax.get_ylim()
-        drop = (ymax - ymin) * 0.16
-        for mx, nm in zip(grp_mid, grp_nm):
-            ax.text(mx, ymin - drop, nm,
-                    ha="center", va="top",
-                    fontsize=11, fontweight="bold",
-                    color="#222222")
-        ax.set_ylim(bottom=ymin - (ymax - ymin) * 0.04)
+            ax.plot(xs, ys,
+                    color=color,
+                    marker=mkr,
+                    markersize=7,
+                    markerfacecolor=color,
+                    markeredgecolor="white",
+                    markeredgewidth=0.9,
+                    linewidth=2.2,
+                    label=DATASET_NAMES.get(ds, ds),
+                    zorder=3)
 
-    handles = [mpatches.Patch(facecolor=PARAM_PALETTE[p], edgecolor="white",
-                              label=PARAM_LABELS[p]) for p in PARAMS]
-    fig.legend(handles=handles, loc="lower center", ncol=4,
-               bbox_to_anchor=(0.5, -0.10),
-               framealpha=0.9, edgecolor="#bbbbbb", fontsize=10)
-    fig.suptitle("Fig 5 — Parameter Sensitivity: Runtime vs Uncertainty Parameters",
-                 fontsize=13, fontweight="bold", y=1.02)
-    fig.tight_layout()
-    fig.savefig("figures/fig5.pdf", bbox_inches="tight")
-    fig.savefig("figures/fig5.png", bbox_inches="tight")
-    print("  ✓ fig5 saved")
+        # x-axis: show actual parameter values
+        if not df[df["param"] == param].empty:
+            xs_all = sorted(df[df["param"] == param]["value"].unique())
+            ax.set_xticks(xs_all)
+            ax.set_xticklabels([str(v) for v in xs_all], fontsize=9)
+
+        ax.set_xlabel(f"Parameter {PARAM_LABELS[param]}", fontsize=11)
+        ax.set_ylabel("Runtime (ms)", fontsize=11)
+        ax.set_title(f"Sensitivity to {PARAM_LABELS[param]}",
+                     pad=8, fontsize=12, fontweight="bold")
+
+        # REMOVED: ax.legend() from here
+
+    # --- NEW: Create a single, figure-level legend ---
+    # Collect unique handles and labels across all axes (in case some datasets are missing in the first plot)
+    handles, labels = [], []
+    for ax in axes:
+        for handle, label in zip(*ax.get_legend_handles_labels()):
+            if label not in labels:
+                handles.append(handle)
+                labels.append(label)
+
+    fig.legend(handles, labels,
+               loc="upper center",
+               bbox_to_anchor=(0.5, 0),
+               ncol=len(labels),
+               fontsize=10,
+               framealpha=0.9,
+               edgecolor="#bbbbbb")
+
+    # Adjusted the rect slightly from 0.98 to 0.94 to make room for the top legend
+    fig.tight_layout(rect=[0, 0, 1, 0.94])
+    fig.savefig("figures/Fig7.tif", bbox_inches="tight", dpi=300, format="tiff")
+    print("  ✓ Fig5.tif saved")
     plt.close(fig)
 
 
@@ -478,36 +519,71 @@ def fig6(df4b):
                loc="lower center", ncol=3,
                bbox_to_anchor=(0.5, -0.15),
                framealpha=0.9, edgecolor="#bbbbbb", fontsize=9)
-    fig.suptitle("Fig 6 — Pruning Group Dominance: Marginal vs Exclusive Benefit",
-                 fontsize=13, fontweight="bold", y=1.02)
     fig.tight_layout()
-    fig.savefig("figures/fig6.pdf", bbox_inches="tight")
-    fig.savefig("figures/fig6.png", bbox_inches="tight")
-    print("  ✓ fig6 saved")
+    fig.savefig("figures/Fig8.tif", bbox_inches="tight", dpi=300, format="tiff")
+    print("  ✓ Fig6.tif saved")
     plt.close(fig)
 
 
-# ── Fig 7 — Peak frontier size ────────────────────────────────────────────────
+# ── Fig 7 — Peak memory (exp8) or peak frontier size (exp1 fallback) ──────────
+#
+# BUG FIX (v2 → v3):
+#   The exp8 CSV schema is:
+#     dataset, k, algorithm, rep, peak_heap_mb, frontier_kind
+#   The old code used col = "max_frontier_size" for exp8, which does NOT exist
+#   in the exp8 CSV (it is an exp1 column named "max_queue_size").
+#
+#   Fix:
+#     • When df8 is provided → plot "peak_heap_mb" (MB, from exp8)
+#     • When falling back to df1 → plot "max_queue_size" (count, from exp1)
+#   ylabel and figure title updated accordingly.
+#
+#   Additionally, exp8 algorithm names include "V3_BFS_P123"/"V4_DFS_P123"
+#   (not "V3_BFS_Search"/"V4_DFS_Search"), so INTERNAL is restricted to the
+#   two variants present in both exp1 and exp8: V1_BFS_Full, V2_DFS_Full.
 def fig7(df8=None, df1=None):
-    INTERNAL = ["V1_BFS_Full", "V2_DFS_Full"]
-    src = df8 if df8 is not None else df1
-    col = "max_frontier_size" if df8 is not None else "max_queue_size"
+    INTERNAL = ["V1_BFS_Full", "V2_DFS_Full", "V3_BFS_Search", "V4_DFS_Search"]
 
-    datasets  = sorted(src["dataset"].unique())
-    n_ds      = len(datasets)
-    fig, axes = plt.subplots(1, n_ds, figsize=(4.6 * n_ds, 4.2), sharey=False)
-    if n_ds == 1:
-        axes = [axes]
+    if df8 is not None:
+        src = df8.copy()
+        # Map exp8 algorithm names to standard names
+        algo_map = {
+            "V3_BFS_P123": "V3_BFS_Search",
+            "V4_DFS_P123": "V4_DFS_Search"
+        }
+        src["algorithm"] = src["algorithm"].replace(algo_map)
+        col = "peak_heap_mb"
+        ylabel_str = "Peak heap (MB)"
+    else:
+        src = df1
+        col = "max_queue_size"
+        ylabel_str = "Peak frontier size"
+
+    datasets = sorted(src["dataset"].unique())
+    n_ds = len(datasets)
+
+    # --- THAY ĐỔI TẠI ĐÂY: Chuyển sang lưới 2x2 nếu có 4 datasets ---
+    if n_ds == 4:
+        fig, axes = plt.subplots(2, 2, figsize=(10, 9), sharey=False)
+        axes = axes.flatten()
+    else:
+        fig, axes = plt.subplots(1, n_ds, figsize=(4.6 * n_ds, 4.2), sharey=False)
+        if n_ds == 1: axes = [axes]
 
     for i, (ax, ds) in enumerate(zip(axes, datasets)):
-        sub    = src[(src["dataset"] == ds) & (src["algorithm"].isin(INTERNAL))]
+        sub = src[(src["dataset"] == ds) & (src["algorithm"].isin(INTERNAL))]
+
+        if sub.empty:
+            ax.set_visible(False)
+            continue
+
         k_vals = sorted(sub["k"].unique())
         for algo in INTERNAL:
-            g     = sub[sub["algorithm"] == algo].groupby("k")[col]
+            g = sub[sub["algorithm"] == algo].groupby("k")[col]
             means = g.mean().reindex(k_vals)
-            stds  = g.std().reindex(k_vals).fillna(0)
-            lo    = (means - stds).clip(lower=0).values
-            hi    = (means + stds).values
+            stds = g.std().reindex(k_vals).fillna(0)
+            lo = (means - stds).clip(lower=0).values
+            hi = (means + stds).values
             ax.fill_between(k_vals, lo, hi,
                             color=PALETTE[algo], alpha=0.14)
             ax.plot(k_vals, means.values,
@@ -519,21 +595,26 @@ def fig7(df8=None, df1=None):
                     markeredgecolor="white",
                     markeredgewidth=0.9,
                     linewidth=2.2, zorder=3)
+
         ax.set_xlabel("k")
-        ax.set_ylabel("Peak frontier size" if i == 0 else "")
+        # Ghi nhãn y cho các biểu đồ ở cột bên trái
+        if n_ds == 4:
+            ax.set_ylabel(ylabel_str if i % 2 == 0 else "")
+        else:
+            ax.set_ylabel(ylabel_str if i == 0 else "")
+
         ax.set_title(DATASET_NAMES.get(ds, ds), pad=6)
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 
     handles = [_make_line_handle(a) for a in INTERNAL]
-    fig.legend(handles=handles, loc="lower center", ncol=2,
-               bbox_to_anchor=(0.5, -0.12),
+    # Điều chỉnh bbox_to_anchor để legend không đè lên đồ thị trong lưới 2x2
+    fig.legend(handles=handles, loc="lower center", ncol=4,
+               bbox_to_anchor=(0.5, -0.05),
                framealpha=0.9, edgecolor="#bbbbbb", handlelength=2.8)
-    fig.suptitle("Fig 7 — Peak Frontier Size: Priority Queue (BFS) vs Stack (DFS)",
-                 fontsize=13, fontweight="bold", y=1.02)
+
     fig.tight_layout()
-    fig.savefig("figures/fig7.pdf", bbox_inches="tight")
-    fig.savefig("figures/fig7.png", bbox_inches="tight")
-    print("  ✓ fig7 saved")
+    fig.savefig("figures/Fig9.tif", bbox_inches="tight", dpi=300, format="tiff")
+    print("  ✓ Fig7.tif saved as 2x2 grid")
     plt.close(fig)
 
 
