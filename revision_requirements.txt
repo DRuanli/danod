@@ -1,0 +1,174 @@
+PONE-D-26-07832
+Best-First Search–Based Approach for Mining Top-K Closed Frequent Itemsets from Uncertain Databases
+PLOS One
+
+Dear Dr. Nguyen,
+
+Thank you for submitting your manuscript to PLOS ONE. After careful consideration, we feel that it has merit but does not fully meet PLOS ONE’s publication criteria as it currently stands. Therefore, we invite you to submit a revised version of the manuscript that addresses the points raised during the review process.
+
+Please submit your revised manuscript by May 22 2026 11:59PM. If you will need more time than this to complete your revisions, please reply to this message or contact the journal office at plosone@plos.org. When you're ready to submit your revision, log on to https://www.editorialmanager.com/pone/ and select the 'Submissions Needing Revision' folder to locate your manuscript file.
+
+Please include the following items when submitting your revised manuscript:
+A letter that responds to each point raised by the academic editor and reviewer(s). You should upload this letter as a separate file labeled 'Response to Reviewers'.
+A marked-up copy of your manuscript that highlights changes made to the original version. You should upload this as a separate file labeled 'Revised Manuscript with Track Changes'.
+An unmarked version of your revised paper without tracked changes. You should upload this as a separate file labeled 'Manuscript'.
+If you would like to make changes to your financial disclosure, please include your updated statement in your cover letter. Guidelines for resubmitting your figure files are available below the reviewer comments at the end of this letter.
+
+If applicable, we recommend that you deposit your laboratory protocols in protocols.io to enhance the reproducibility of your results. Protocols.io assigns your protocol its own identifier (DOI) so that it can be cited independently in the future. For instructions see: https://journals.plos.org/plosone/s/submission-guidelines#loc-laboratory-protocols. Additionally, PLOS ONE offers an option for publishing peer-reviewed Lab Protocol articles, which describe protocols hosted on protocols.io. Read more information on sharing protocols at https://plos.org/protocols?utm_medium=editorial-email&utm_source=authorletters&utm_campaign=protocols.
+
+As the corresponding author, your ORCID iD is verified in the submission system and will appear in the published article. PLOS supports the use of ORCID, and we encourage all coauthors to register for an ORCID iD and use it as well. Please encourage your coauthors to verify their ORCID iD within the submission system before final acceptance, as unverified ORCID iDs will not appear in the published article. Only the individual author can complete the verification step; PLOS staff cannot verify ORCID iDs on behalf of authors.
+
+We look forward to receiving your revised manuscript.
+
+Kind regards,
+
+Tai Dinh
+Academic Editor
+PLOS One
+
+Journal Requirements:
+
+When submitting your revision, we need you to address these additional requirements.
+
+1. Please ensure that your manuscript meets PLOS ONE's style requirements, including those for file naming. The PLOS ONE style templates can be found at
+
+https://journals.plos.org/plosone/s/file?id=wjVg/PLOSOne_formatting_sample_main_body.pdf and
+
+https://journals.plos.org/plosone/s/file?id=ba62/PLOSOne_formatting_sample_title_authors_affiliations.pdf
+
+2. We note you have included a table to which you do not refer in the text of your manuscript. Please ensure that you refer to Table 3 in your text; if accepted, production will need this reference to link the reader to the Table.
+
+3. If the reviewer comments include a recommendation to cite specific previously published works, please review and evaluate these publications to determine whether they are relevant and should be cited. There is no requirement to cite these works unless the editor has indicated otherwise.
+
+[Note: HTML markup is below. Please do not edit.]
+
+Reviewers' comments:
+
+Reviewer's Responses to Questions
+
+Comments to the Author
+
+1. Is the manuscript technically sound, and do the data support the conclusions?
+
+The manuscript must describe a technically sound piece of scientific research with data that supports the conclusions. Experiments must have been conducted rigorously, with appropriate controls, replication, and sample sizes. The conclusions must be drawn appropriately based on the data presented.
+
+Reviewer #1: Partly
+
+Reviewer #2: Yes
+
+Reviewer #3: Yes
+
+2. Has the statistical analysis been performed appropriately and rigorously?
+
+Reviewer #1: Yes
+
+Reviewer #2: Yes
+
+Reviewer #3: Yes
+
+3. Have the authors made all data underlying the findings in their manuscript fully available?
+
+The PLOS Data policy requires authors to make all data underlying the findings described in their manuscript fully available without restriction, with rare exception (please refer to the Data Availability Statement in the manuscript PDF file). The data should be provided as part of the manuscript or its supporting information, or deposited to a public repository. For example, in addition to summary statistics, the data points behind means, medians and variance measures should be available. If there are restrictions on publicly sharing data—e.g. participant privacy or use of data from a third party—those must be specified.
+
+Reviewer #1: Yes
+
+Reviewer #2: Yes
+
+Reviewer #3: Yes
+
+4. Is the manuscript presented in an intelligible fashion and written in standard English?
+
+PLOS ONE does not copyedit accepted manuscripts, so the language in submitted articles must be clear, correct, and unambiguous. Any typographical or grammatical errors should be corrected at revision, so please note any specific errors here.
+
+Reviewer #1: No
+
+Reviewer #2: Yes
+
+Reviewer #3: Yes
+
+5. Review Comments to the Author
+
+Please use the space provided to explain your answers to the questions above. You may also include additional comments for the author, including concerns about dual publication, research ethics, or publication ethics. (Please upload your review as an attachment if it exceeds 20,000 characters)
+
+Reviewer #1:
+1. The paper inconsistently uses "TUFC1" and "TUFCII" throughout the manuscript, even within the same page, creating confusion about the actual algorithm name. This lack of consistency undermines the professionalism of the work and suggests poor attention to detail during the writing phase.
+
+2. The claim that "no existing method systematically exploits support-ordered exploration" is overstated and ignores prior work on best-first search in pattern mining. Algorithms in high-utility itemset mining have long used priority queues and support-based ordering, making this novelty claim insufficiently supported.
+
+3. The literature review conflates deterministic, uncertain, and high-utility mining without clearly distinguishing their unique challenges. Detailed discussion of algorithms like FP-Growth and Eclat adds limited value to the core argument about uncertain data mining.
+
+4. The problem definition section suffers from excessive mathematical notation without adequate intuitive explanation. Multiple layers of abstraction (generating functions, PMFs, tail probabilities) are introduced before readers understand why these concepts are necessary.
+
+5. The proof of Lemma 1 is mathematically imprecise: it incorrectly asserts that per-transaction probability inequalities directly imply tail probability distribution inequalities. This overlooks the proper derivation using stochastic dominance concepts.
+
+6. Algorithm 1 uses the undefined variable "min_sup" in a top-k context where thresholds are dynamic. This creates immediate confusion about whether the algorithm requires a minimum support parameter, contradicting the top-k premise.
+
+7. The priority ordering definition introduces arbitrary tie-breaking rules (F-value comparison, itemset length) without theoretical or empirical justification. These appear as unnecessary complexity without demonstrated performance impact.
+
+8. The claim that direct convolution runs in O(n²) time is misleading without clarifying that n is the tidset size. For long itemsets where tidsets approach database size, O(n²) becomes computationally prohibitive.
+
+9. Algorithm 3 contains a logical flaw: it breaks when encountering a support lower than X's support, assuming all higher-support extensions appear first. If sorting is unstable, an equal-support extension appearing after a lower-support one would incorrectly declare X closed.
+
+10. Lemma 4's early termination proof assumes perfect priority queue ordering by support, but never addresses the computational cost of maintaining this ordering. The proof becomes circular by assuming what it needs to prove.
+
+11. The pruning strategy section presents standard techniques (Dynamic Threshold, Item-Level Filtering) as novel contributions. Strategy P4 lacks implementation details, making reproduction impossible.
+
+12. The experimental methodology is fundamentally flawed: uncertainty is synthetically injected using arbitrary parameters without sensitivity analysis. Results cannot be generalized to real uncertain databases with different noise characteristics.
+
+13. The ablation study reports speedup factors without variance across multiple runs or statistical significance testing. Given algorithm complexity, small improvements could be within measurement error, especially without averaging over multiple runs.
+
+Reviewer #2: Overall Summary
+The manuscript proposes a Best-First Search (BestFS)–based approach for mining Top-k Closed Frequent Itemsets from uncertain databases under the tuple-independence model. The work addresses an important limitation of existing approaches, namely the reliance on depth-first search (DFS) traversal, and argues that support-ordered exploration improves pruning effectiveness, closure verification efficiency, and enables safe early termination. The topic is relevant to uncertain data mining and top-k pattern mining communities, and the manuscript is generally well structured and technically motivated.
+
+
+Strengths
+1. Clear Problem Motivation: The manuscript clearly identifies a gap in the literature regarding the impact of search order in uncertain top-k closed frequent itemset mining.
+2. Conceptual Contribution: The use of priority-queue-driven BestFS aligned with probabilistic support is meaningful and well justified.
+3. Theoretical Foundation: Formal definitions, lemmas, and theorems provide sound grounding.
+4. Comprehensive Pruning Framework: The integration of seven pruning strategies demonstrates careful design.
+5. Experimental Coverage: Evaluation across dense and sparse datasets strengthens practical relevance.
+
+
+Major Concerns and Suggestions
+1. Novelty Clarification: The manuscript should more clearly differentiate the proposed approach from prior branch-and-bound or best-first frameworks in related domains.
+2. Lack of External Baselines: Experimental evaluation compares only internal variants. Including comparisons with existing uncertain or top-k closed mining methods would strengthen claims.
+3. Synthetic Uncertainty Model: The robustness of the injected uncertainty model should be validated through sensitivity analysis.
+4. Memory Analysis: Provide quantitative statistics on priority queue size and peak memory usage.
+5. Complexity Discussion: Include an overall time and space complexity analysis.
+6. Closure Optimization Details: Provide additional formal explanation and examples for Strategy P7.
+
+Minor Comments
+1. Ensure consistent notation (support(X) vs. ProbSupτ(X)).
+2. Minor grammatical revisions are needed for clarity.
+3. Improve figure readability and labeling.
+
+4. Include more detailed reproducibility information (runtime averaging, parameter settings, JVM configuration).
+Ethical and Publication Considerations
+No concerns regarding research ethics, competing interests, or dual publication are evident. The provision of a public code repository enhances transparency and reproducibility.
+Overall Recommendation
+Major Revision. The manuscript presents promising ideas but requires additional comparative evaluation, deeper complexity analysis, and clearer positioning within existing literature.
+
+Reviewer #3: This manuscript explores a novel approach of deriving top k frequent itemsets in an efficient manner using queue based approach to prune the itemsets with frequency less than threshold in early stages. Author has provided a thorough mathematical analysis of problem statement and proposed solution. This approach is explained in different phases and steps to provide required technical analysis of the itemset mining efficiency.
+
+However, I see one short coming of this approach which should be explained with some mathematical analysis as well as experimental dataset analysis. Author described that the early pruning of low frequency itemsets, but have not explained how the itemsets with all frequencies can be derived without exploring an entire transaction database. In order to do the first phase of 1-item set purning, there is high possibility that the high frequency items might not show up at the later stages. Even if the approach of utilizing the set-enumeration tree is used, author has not explained how this tree can help to determine frequencies of 1 itemsets in the first phase.
+
+Let's take an example, typical apriori example is when a person buys milk and bread, they also buy beer frequently. Now, if a person buying milk, bread and beer combination (may be 60% transactions) has started buying wine because of the some discounts offered (almost near threshold 55% transactions), such frequent transactions might show up in the tree only by scanning the frequency of item wine (lets say its individual frequency is 55% in overall transactions). Then how can the proposed approach help to derive the combination of (milk, bread, beer, wine) at early stages if the later transactions (55%) started showing up for wine purchase. It would be great to get a mathematical representation as well as experimental dataset result of the enumeration tree. I would consider this as minor revision. After this revision, I would be happy to accept this manuscript.
+
+6. PLOS authors have the option to publish the peer review history of their article (what does this mean?). If published, this will include your full peer review and any attached files.
+
+
+If you choose “no”, your identity will remain anonymous but your review may still be made public.
+
+
+Do you want your identity to be public for this peer review? For information about this choice, including consent withdrawal, please see our Privacy Policy.
+
+Reviewer #1: No
+
+Reviewer #2: Yes: Wenke Du
+
+Reviewer #3: Yes: Sanket Chobe
+
+
+
+
+[NOTE: If reviewer comments were submitted as an attachment file, they will be attached to this email and accessible via the submission site. Please log into your account, locate the manuscript record, and check for the action link "View Attachments". If this link does not appear, there are no attachment files.]
